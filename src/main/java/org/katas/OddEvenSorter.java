@@ -85,16 +85,14 @@ public class OddEvenSorter {
     }
 
     private void tryToSwapOrAddToWrongPlaces(
-            int index, Deque<Integer> candidatesToSwapWith, Deque<Integer> wrongPlaces)
-    {
+            int index, Deque<Integer> candidatesToSwapWith, Deque<Integer> wrongPlaces) {
         if (candidatesToSwapWith.size() > 0) {
             swap(index, candidatesToSwapWith.remove());
         } else if (isLastItem(index)) {
             // last resort to balance odd and evens
             if ((isOddAt(index) && isEvenAt(0)) || (isEvenAt(index) && isOddAt(0))) {
                 moveLastItemToBeginning(sortedList);
-            }
-            else {
+            } else {
                 throw new RuntimeException("Can't sort elements as needed. Number of odds or evens are to much");
             }
         } else {
