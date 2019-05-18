@@ -1,6 +1,7 @@
 package org.katas;
 
 import java.util.*;
+import java.util.function.Predicate;
 
 /**
  * <p>
@@ -26,9 +27,11 @@ public class OddEvenSorter {
     private Deque<Integer> oddsInWrongPlaces = new ArrayDeque<>();
     private Deque<Integer> evensInWrongPlaces = new ArrayDeque<>();
     private List<Integer> sortedList;
+    private boolean isFirstShouldBeEven;
 
     public OddEvenSorter(List<Integer> inputData) {
         this.sortedList = new ArrayList<>(inputData);
+        this.isFirstShouldBeEven = evenCount() > oddCount() || (evenCount() == oddCount() && isEvenAt(0));
     }
 
     public static List<Integer> sort(List<Integer> inputData) {
@@ -42,12 +45,6 @@ public class OddEvenSorter {
                 tryToSwapOrAddToWrongPlaces(index, evensInWrongPlaces, oddsInWrongPlaces);
             } else if (expectedOddAt(index) && isEvenAt(index)) {
                 tryToSwapOrAddToWrongPlaces(index, oddsInWrongPlaces, evensInWrongPlaces);
-            } else if (isLastItem(index)) {
-                if (isEvenAt(index) && hasOddInWrongPlace()) {
-                    swap(index, oddsInWrongPlaces.remove());
-                } else if (isOddAt(index) && hasEvenInWrongPlace()) {
-                    swap(index, evensInWrongPlaces.remove());
-                }
             }
         }
         if (hasEvenInWrongPlace() || hasOddInWrongPlace()) {
@@ -73,28 +70,25 @@ public class OddEvenSorter {
     }
 
     private boolean expectedEvenAt(int index) {
-        return isFirstEven() ? isEven(index) : isOdd(index);
+        return isFirstShouldBeEven ? isEven(index) : isOdd(index);
     }
 
-    private boolean isLastItem(int index) {
-        return index == sortedList.size() - 1;
+    private long oddCount() {
+        return count(this::isOdd, sortedList);
     }
 
-    private boolean isFirstEven() {
-        return isEvenAt(0);
+    private long evenCount() {
+        return count(this::isEven, sortedList);
+    }
+
+    private long count(Predicate<Integer> predicate, List<Integer> data) {
+        return data.stream().filter(predicate).count();
     }
 
     private void tryToSwapOrAddToWrongPlaces(
             int index, Deque<Integer> candidatesToSwapWith, Deque<Integer> wrongPlaces) {
         if (candidatesToSwapWith.size() > 0) {
             swap(index, candidatesToSwapWith.remove());
-        } else if (isLastItem(index)) {
-            // last resort to balance odd and evens
-            if ((isOddAt(index) && isEvenAt(0)) || (isEvenAt(index) && isOddAt(0))) {
-                moveLastItemToBeginning(sortedList);
-            } else {
-                throw new RuntimeException("Can't sort elements as needed. Number of odds or evens are to much");
-            }
         } else {
             wrongPlaces.add(index);
         }
@@ -106,11 +100,6 @@ public class OddEvenSorter {
 
     private boolean hasEvenInWrongPlace() {
         return evensInWrongPlaces.size() > 0;
-    }
-
-    private void moveLastItemToBeginning(List<Integer> list) {
-        list.add(0, list.get(list.size() - 1));
-        list.remove(list.size() - 1);
     }
 
     private boolean isEven(Integer value) {
